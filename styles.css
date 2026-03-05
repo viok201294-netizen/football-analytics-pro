@@ -1023,3 +1023,96 @@ body.dark-mode ::-webkit-scrollbar-thumb {
         padding: 8px 12px;
     }
 }
+/* Batch Table - Enhanced */
+.batch-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.batch-table th {
+    padding: 14px;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.1));
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid rgba(0, 122, 255, 0.2);
+}
+
+.batch-table td {
+    padding: 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.batch-table input {
+    width: 100%;
+    border: 2px solid rgba(0, 122, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+    transition: border-color 0.2s;
+}
+
+.batch-table input:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    outline: none;
+}
+
+.batch-delete-btn {
+    background: rgba(255, 59, 48, 0.15);
+    color: var(--danger);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.batch-delete-btn:hover {
+    background: rgba(255, 59, 48, 0.25);
+}
+
+/* Design Credit */
+.design-credit {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.1));
+    border-radius: 16px;
+    margin-top: 24px;
+    border: 2px solid rgba(0, 122, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.design-credit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue));
+}
+
+.design-credit h3 {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.design-credit p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.design-credit .credit-name {
+    font-weight: 700;
+    color: var(--primary-blue);
+    font-size: 15px;
+}
