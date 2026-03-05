@@ -58,6 +58,133 @@ const state = {
     adminLoggedIn: false
 };
 
+let auth, db, currentUser = null;
+
+// ============================================================================
+// FIREBASE INITIALIZATION
+// ============================================================================
+
+async function initializeFirebase() {
+    try {
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
+        const { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+        const { getFirestore, collection, addDoc, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlABRPZgXdn2KKosQ9R7cHYuKpYsnwwxc",
+            authDomain: "ai-football-analytics.firebaseapp.com",
+            projectId: "ai-football-analytics",
+            storageBucket: "ai-football-analytics.firebasestorage.app",
+            messagingSenderId: "248698103507",
+            appId: "1:248698103507:web:2ad8f12ce083b808b85626"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                updateUserUI(user);
+                loadUserAnalyses(user.uid);
+            } else {
+                currentUser = null;
+                updateLogoutUI();
+            }
+        });
+
+    } catch (error) {
+        console.warn('Firebase: ' + error.message);
+    }
+}
+
+async function loginWithGoogle() {
+    try {
+        const { GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        showToast('✅ Đăng nhập thành công');
+    } catch (error) {
+        showToast('❌ Lỗi: ' + error.message);
+    }
+}
+
+async function logout() {
+    if (!confirm('Đăng xuất?')) return;
+    try {
+        const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+        await signOut(auth);
+        showToast('✅ Đã đăng xuất');
+    } catch (error) {
+        showToast('❌ Lỗi: ' + error.message);
+    }
+}
+
+function updateUserUI(user) {
+    document.getElementById('loginStatus').style.display = 'none';
+    document.getElementById('loggedInStatus').style.display = 'block';
+    document.getElementById('userName').textContent = user.displayName || 'Người dùng';
+    document.getElementById('userEmail').textContent = user.email;
+    const avatar = document.getElementById('userAvatar');
+    if (user.photoURL) {
+        avatar.innerHTML = `<img src="${user.photoURL}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+    }
+}
+
+function updateLogoutUI() {
+    document.getElementById('loginStatus').style.display = 'block';
+    document.getElementById('loggedInStatus').style.display = 'none';
+    const avatar = document.getElementById('userAvatar');
+    avatar.innerHTML = '<i class="fas fa-user" aria-hidden="true"></i>';
+}
+
+async function saveAnalysisToFirebase(data) {
+    if (!currentUser || !db) return;
+    try {
+        const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+        await addDoc(collection(db, 'analyses'), {
+            userId: currentUser.uid,
+            homeTeam: data.homeTeam,
+            awayTeam: data.awayTeam,
+            odds1: data.odds1,
+            odds2: data.odds2,
+            mainOU: data.mainOU,
+            mainHandicap: data.mainHandicap,
+            result: data.result,
+            timestamp: new Date()
+        });
+    } catch (error) {
+        console.warn('Firebase save: ' + error.message);
+    }
+}
+
+async function loadUserAnalyses(userId) {
+    if (!db) return;
+    try {
+        const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+        const q = query(collection(db, 'analyses'), where('userId', '==', userId));
+        const snapshot = await getDocs(q);
+        
+        let total = 0, tai = 0, xiu = 0, neutral = 0;
+        snapshot.forEach((doc) => {
+            total++;
+            const trend = doc.data().result.trend;
+            if (trend.includes('TÀI')) tai++;
+            else if (trend.includes('XỈU')) xiu++;
+            else neutral++;
+        });
+
+        document.getElementById('userAnalysisCount').textContent = total;
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statTai').textContent = total > 0 ? Math.round((tai / total) * 100) + '%' : '0%';
+        document.getElementById('statXiu').textContent = total > 0 ? Math.round((xiu / total) * 100) + '%' : '0%';
+        document.getElementById('statNeutral').textContent = total > 0 ? Math.round((neutral / total) * 100) + '%' : '0%';
+    } catch (error) {
+        console.warn('Load stats: ' + error.message);
+    }
+}
+
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
