@@ -57,12 +57,148 @@ const state = {
     logoClicks: 0,
     adminLoggedIn: false
 };
+// ============================================================================
+// FIREBASE INITIALIZATION
+// ============================================================================
 
+let auth, db, currentUser = null;
+
+// Initialize Firebase (sau khi load DOM)
+async function initializeFirebase() {
+    try {
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
+        const { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+        const { getFirestore, collection, addDoc, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlABRPZgXdn2KKosQ9R7cHYuKpYsnwwxc",
+            authDomain: "ai-football-analytics.firebaseapp.com",
+            projectId: "ai-football-analytics",
+            storageBucket: "ai-football-analytics.firebasestorage.app",
+            messagingSenderId: "248698103507",
+            appId: "1:248698103507:web:2ad8f12ce083b808b85626"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        // Listen to auth changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                updateUserUI(user);
+                loadUserAnalyses(user.uid);
+            } else {
+                currentUser = null;
+                updateLogoutUI();
+            }
+        });
+
+    } catch (error) {
+        console.error('Firebase init error:', error);
+    }
+}
+
+// Google Login
+async function loginWithGoogle() {
+    try {
+        const { GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        showToast('✅ Đăng nhập thành công');
+    } catch (error) {
+        showToast('❌ Lỗi đăng nhập: ' + error.message);
+    }
+}
+
+// Logout
+async function logout() {
+    if (!confirm('Bạn chắc chắn muốn đăng xuất?')) return;
+    try {
+        const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+        await signOut(auth);
+        showToast('✅ Đã đăng xuất');
+    } catch (error) {
+        showToast('❌ Lỗi: ' + error.message);
+    }
+}
+
+// Update UI after login
+function updateUserUI(user) {
+    document.getElementById('loginStatus').style.display = 'none';
+    document.getElementById('loggedInStatus').style.display = 'block';
+    document.getElementById('userName').textContent = user.displayName || 'Người dùng';
+    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('userAvatar').innerHTML = user.photoURL ? 
+        `<img src="${user.photoURL}" style="width: 100%; height: 100%; border-radius: 50%;">` :
+        '<i class="fas fa-user" aria-hidden="true"></i>';
+}
+
+// Update UI after logout
+function updateLogoutUI() {
+    document.getElementById('loginStatus').style.display = 'block';
+    document.getElementById('loggedInStatus').style.display = 'none';
+    document.getElementById('userAvatar').innerHTML = '<i class="fas fa-user" aria-hidden="true"></i>';
+}
+
+// Save analysis to Firebase
+async function saveAnalysisToFirebase(data) {
+    if (!currentUser || !db) return;
+    try {
+        const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+        await addDoc(collection(db, 'analyses'), {
+            userId: currentUser.uid,
+            homeTeam: data.homeTeam,
+            awayTeam: data.awayTeam,
+            odds1: data.odds1,
+            odds2: data.odds2,
+            mainOU: data.mainOU,
+            mainHandicap: data.mainHandicap,
+            result: data.result,
+            timestamp: new Date()
+        });
+    } catch (error) {
+        console.error('Firebase save error:', error);
+    }
+}
+
+// Load user analyses
+async function loadUserAnalyses(userId) {
+    if (!db) return;
+    try {
+        const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+        const q = query(collection(db, 'analyses'), where('userId', '==', userId));
+        const querySnapshot = await getDocs(q);
+        
+        let total = 0, tai = 0, xiu = 0, neutral = 0;
+        
+        querySnapshot.forEach((doc) => {
+            total++;
+            const trend = doc.data().result.trend;
+            if (trend.includes('TÀI')) tai++;
+            else if (trend.includes('XỈU')) xiu++;
+            else neutral++;
+        });
+
+        // Update stats
+        document.getElementById('userAnalysisCount').textContent = total;
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statTai').textContent = total > 0 ? Math.round((tai / total) * 100) + '%' : '0%';
+        document.getElementById('statXiu').textContent = total > 0 ? Math.round((xiu / total) * 100) + '%' : '0%';
+        document.getElementById('statNeutral').textContent = total > 0 ? Math.round((neutral / total) * 100) + '%' : '0%';
+
+    } catch (error) {
+        console.error('Load analyses error:', error);
+    }
+}
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    initializeFirebase(); // ADD THIS LINE
+    
     setTimeout(() => {
         document.getElementById('splashScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
@@ -72,7 +208,27 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     loadHistoryCount();
     loadDarkMode();
+    loadStats(); // ADD THIS LINE
 });
+
+// Add this new function
+function loadStats() {
+    const history = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
+    let tai = 0, xiu = 0, neutral = 0;
+    
+    history.forEach(h => {
+        const trend = h.result.trend;
+        if (trend.includes('TÀI')) tai++;
+        else if (trend.includes('XỈU')) xiu++;
+        else neutral++;
+    });
+
+    const total = history.length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statTai').textContent = total > 0 ? Math.round((tai / total) * 100) + '%' : '0%';
+    document.getElementById('statXiu').textContent = total > 0 ? Math.round((xiu / total) * 100) + '%' : '0%';
+    document.getElementById('statNeutral').textContent = total > 0 ? Math.round((neutral / total) * 100) + '%' : '0%';
+}
 
 function initializeDropdowns() {
     const ouOptions = document.getElementById('ouOptions');
@@ -241,7 +397,23 @@ function handleFormSubmit(e) {
             mainOU: state.selectedOU,
             mainHandicap: state.selectedHandicap,
             result: result
-        });
+        }
+                    function saveAnalysis(data) {
+    let history = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
+    history.push({
+        ...data,
+        timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('analysisHistory', JSON.stringify(history));
+    loadHistoryCount();
+    
+    // Save to Firebase if logged in
+    if (currentUser) {
+        saveAnalysisToFirebase(data);
+    }
+    
+    showToast('✅ Đã lưu phân tích');
+});
 
         document.getElementById('analysisForm').reset();
         state.selectedOU = null;
