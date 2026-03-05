@@ -1,0 +1,17 @@
+{
+  "name": "ai-football-analytics-pro",
+  "version": "6.0.0",
+  "description": "Advanced AI Football Match Odds Analysis System",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx http-server -p 8000 -c-1",
+    "dev": "npx http-server -p 8000 -c-1"
+  },
+  "keywords": ["football", "betting", "odds", "analysis", "AI"],
+  "author": "viok201294-netizen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/viok201294-netizen/football-analytics-pro.git"
+  }
+}
