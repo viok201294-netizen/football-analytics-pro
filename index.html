@@ -253,43 +253,81 @@
             <div id="batchResults" style="margin-top: 20px;"></div>
         </div>
 
-        <!-- Account Page -->
-        <div id="account" class="page">
-            <div class="header">
-                <div class="version-badge">TÀI KHOẢN</div>
-                <h1 class="page-title">Tài khoản</h1>
-                <p class="page-subtitle">Quản lý cài đặt và đồng bộ dữ liệu</p>
+       <!-- Account Page -->
+<div id="account" class="page">
+    <div class="header">
+        <div class="version-badge">TÀI KHOẢN</div>
+        <h1 class="page-title">Tài khoản</h1>
+        <p class="page-subtitle">Quản lý cài đặt và đồng bộ dữ liệu</p>
+    </div>
+
+    <div class="form-container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div id="userAvatar" style="width: 80px; height: 80px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 36px;">
+                <i class="fas fa-user" aria-hidden="true"></i>
             </div>
+        </div>
 
-            <div class="form-container">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="width: 80px; height: 80px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 36px;">
-                        <i class="fas fa-user" aria-hidden="true"></i>
-                    </div>
+        <div id="loginStatus">
+            <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);">Bạn chưa đăng nhập</p>
+            <button onclick="loginWithGoogle()" class="btn-primary" style="width: 100%; padding: 14px; margin-bottom: 12px; background: white; color: var(--text-primary); border: 2px solid var(--primary-blue);">
+                <i class="fab fa-google" aria-hidden="true"></i> Đăng nhập Google
+            </button>
+            <button onclick="showDevModal()" class="btn-primary" style="width: 100%; padding: 14px;">
+                <i class="fas fa-cog" aria-hidden="true"></i> Tùy chọn nhà phát triển
+            </button>
+        </div>
+
+        <div id="loggedInStatus" style="display: none;">
+            <div style="background: rgba(52,199,89,0.1); border-radius: 12px; padding: 16px; margin-bottom: 20px; border-left: 4px solid var(--success);">
+                <p style="margin-bottom: 8px;"><strong>👋 Xin chào:</strong> <span id="userName">-</span></p>
+                <p style="margin-bottom: 8px;"><strong>📧 Email:</strong> <span id="userEmail">-</span></p>
+                <p><strong>📊 Phân tích:</strong> <span id="userAnalysisCount">0</span></p>
+            </div>
+            <button onclick="logout()" class="btn-danger" style="width: 100%; padding: 14px;">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng xuất
+            </button>
+        </div>
+
+        <hr style="margin: 20px 0;">
+
+        <div>
+            <h3 style="margin-bottom: 12px;">⚙️ Cài đặt</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                <span>Chế độ tối</span>
+                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+                <span>Âm thanh</span>
+                <input type="checkbox" id="soundToggle" checked>
+            </div>
+        </div>
+
+        <hr style="margin: 20px 0;">
+
+        <div>
+            <h3 style="margin-bottom: 12px;">📊 Thống kê</h3>
+            <div class="info-grid" style="margin-top: 12px;">
+                <div class="info-card">
+                    <div class="info-value" id="statTotal">0</div>
+                    <div class="info-label">Tổng phân tích</div>
                 </div>
-
-                <div id="loginStatus">
-                    <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);">Bạn chưa đăng nhập</p>
-                    <button onclick="showDevModal()" class="btn-primary" style="width: 100%; padding: 14px;">
-                        <i class="fas fa-cog" aria-hidden="true"></i> Tùy chọn nhà phát triển
-                    </button>
+                <div class="info-card">
+                    <div class="info-value" id="statTai">0%</div>
+                    <div class="info-label">Tài</div>
                 </div>
-
-                <hr style="margin: 20px 0;">
-
-                <div>
-                    <h3 style="margin-bottom: 12px;">⚙️ Cài đặt</h3>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
-                        <span>Chế độ tối</span>
-                        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
-                        <span>Âm thanh</span>
-                        <input type="checkbox" id="soundToggle" checked>
-                    </div>
+                <div class="info-card">
+                    <div class="info-value" id="statXiu">0%</div>
+                    <div class="info-label">Xỉu</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-value" id="statNeutral">0%</div>
+                    <div class="info-label">Trung lập</div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Developer Modal -->
         <div id="devModal" class="modal-overlay" onclick="closeDevModal(event)">
